@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth-server";
 
+/** Accepts 0.5 to 5 in 0.5 steps (half-star ratings). */
 function validRating(n: unknown): n is number {
-  return typeof n === "number" && Number.isInteger(n) && n >= 1 && n <= 5;
+  if (typeof n !== "number" || !Number.isFinite(n)) return false;
+  const r = Math.round(n * 2) / 2;
+  return r >= 0.5 && r <= 5;
 }
 
 export async function GET(
@@ -43,12 +46,16 @@ export async function PUT(
     const { rating, notes } = body;
     if (rating !== undefined && rating !== null && !validRating(rating)) {
       return NextResponse.json(
-        { error: "Rating must be an integer from 1 to 5" },
+        { error: "Rating must be from 0.5 to 5 in half-star steps" },
         { status: 400 }
       );
     }
     const notesStr =
       notes !== undefined && notes !== null ? String(notes).trim() : null;
+    const normalizedRating =
+      rating !== undefined && rating !== null
+        ? Math.round(rating * 2) / 2
+        : null;
     const review = await prisma.bookReview.upsert({
       where: {
         userId_bookId: { userId: session.user.id, bookId },
@@ -56,11 +63,11 @@ export async function PUT(
       create: {
         userId: session.user.id,
         bookId,
-        rating: rating ?? null,
+        rating: normalizedRating,
         notes: notesStr || null,
       },
       update: {
-        ...(rating !== undefined ? { rating: rating ?? null } : {}),
+        ...(rating !== undefined ? { rating: normalizedRating } : {}),
         ...(notes !== undefined ? { notes: notesStr || null } : {}),
       },
       include: { user: { select: { id: true, name: true } } },

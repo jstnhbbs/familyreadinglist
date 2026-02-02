@@ -1,17 +1,20 @@
 "use client";
 
+import { useId } from "react";
+
 const MAX_STARS = 5;
 
 type StarRatingProps = {
   value: number | null;
   onChange?: (rating: number) => void;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   readonly?: boolean;
 };
 
 const sizeClasses = {
   sm: "h-4 w-4",
   md: "h-5 w-5",
+  lg: "h-8 w-8",
 };
 
 const starPath =
@@ -23,19 +26,20 @@ export function StarRating({
   size = "md",
   readonly = false,
 }: StarRatingProps) {
-  const rating = value ?? 0;
+  const rating = value != null ? Number(value) : 0;
   const isInteractive = !readonly && onChange;
   const sizeClass = sizeClasses[size];
+  const baseId = useId().replace(/:/g, "");
 
-  const handleClick = (n: number) => {
-    if (isInteractive) onChange(n);
+  const handleClick = (clickValue: number) => {
+    if (isInteractive) onChange(clickValue);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, n: number) => {
+  const handleKeyDown = (e: React.KeyboardEvent, clickValue: number) => {
     if (!isInteractive) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      onChange(n);
+      onChange(clickValue);
     }
   };
 
@@ -44,34 +48,90 @@ export function StarRating({
       className="flex items-center gap-0.5"
       role={readonly ? "img" : "group"}
       aria-label={
-        value != null ? `${value} out of ${MAX_STARS} stars` : "No rating"
+        value != null
+          ? `${value} out of ${MAX_STARS} stars`
+          : "No rating"
       }
     >
       {Array.from({ length: MAX_STARS }, (_, i) => {
-        const starValue = i + 1;
-        const filled = starValue <= rating;
+        const starIndex = i + 1;
+        const rawFill = rating - (starIndex - 1);
+        const fillRatio = Math.min(
+          1,
+          Math.max(0, Math.round(rawFill * 100) / 100)
+        );
+        const halfValue = starIndex - 0.5;
+        const fullValue = starIndex;
         return (
           <span
-            key={starValue}
-            className={`inline-block shrink-0 ${sizeClass} ${
+            key={starIndex}
+            className={`relative inline-flex shrink-0 ${sizeClass} ${
               isInteractive
-                ? "cursor-pointer rounded p-0.5 transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1"
+                ? "cursor-pointer rounded p-0.5 transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 focus-visible:ring-offset-1"
                 : ""
             }`}
-            onClick={() => handleClick(starValue)}
-            onKeyDown={(e) => handleKeyDown(e, starValue)}
-            tabIndex={isInteractive ? 0 : undefined}
-            role={isInteractive ? "button" : undefined}
-            aria-pressed={isInteractive ? filled : undefined}
+            role={isInteractive ? "group" : undefined}
+            aria-label={
+              isInteractive
+                ? `Rate ${halfValue} or ${fullValue} stars`
+                : undefined
+            }
           >
             <svg
-              className={`${sizeClass} ${filled ? "text-amber-500" : "text-stone-300"}`}
+              className={sizeClass}
               viewBox="0 0 20 20"
-              fill="currentColor"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.5"
               aria-hidden
             >
-              <path d={starPath} fillOpacity={filled ? 1 : 0.35} />
+              <defs>
+                <mask id={`${baseId}-star-mask-${i}`}>
+                  <rect x="0" y="0" width="20" height="20" fill="white" />
+                  <rect
+                    x={20 * fillRatio}
+                    y="0"
+                    width={20 * (1 - fillRatio)}
+                    height="20"
+                    fill="black"
+                  />
+                </mask>
+              </defs>
+              {/* Unfilled – visible gray for contrast */}
+              <path
+                d={starPath}
+                fill="currentColor"
+                className="text-stone-500"
+                fillOpacity={0.65}
+              />
+              {/* Filled portion – dark amber, masked to show left portion only */}
+              <path
+                d={starPath}
+                fill="currentColor"
+                className="text-amber-700"
+                mask={`url(#${baseId}-star-mask-${i})`}
+              />
             </svg>
+            {isInteractive && (
+              <>
+                <span
+                  className="absolute left-0 top-0 h-full w-1/2 cursor-pointer rounded-l"
+                  onClick={() => handleClick(halfValue)}
+                  onKeyDown={(e) => handleKeyDown(e, halfValue)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${halfValue} stars`}
+                />
+                <span
+                  className="absolute left-1/2 top-0 h-full w-1/2 cursor-pointer rounded-r"
+                  onClick={() => handleClick(fullValue)}
+                  onKeyDown={(e) => handleKeyDown(e, fullValue)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${fullValue} stars`}
+                />
+              </>
+            )}
           </span>
         );
       })}

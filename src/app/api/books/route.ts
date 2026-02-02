@@ -24,8 +24,11 @@ export async function GET(request: Request) {
   }
 }
 
+/** Accepts 0.5 to 5 in 0.5 steps (half-star ratings). */
 function validRating(n: unknown): n is number {
-  return typeof n === "number" && Number.isInteger(n) && n >= 1 && n <= 5;
+  if (typeof n !== "number" || !Number.isFinite(n)) return false;
+  const r = Math.round(n * 2) / 2;
+  return r >= 0.5 && r <= 5;
 }
 
 export async function POST(request: Request) {
@@ -38,25 +41,32 @@ export async function POST(request: Request) {
   }
   try {
     const body = await request.json();
-    const { title, author, genre, status, rating } = body;
+    const { title, author, genre, status, rating, notes } = body;
     if (!title?.trim() || !author?.trim() || !genre?.trim()) {
       return NextResponse.json(
         { error: "Title, author, and genre are required" },
         { status: 400 }
       );
     }
-    if (!["read", "want_to_read"].includes(status)) {
+    const validStatuses = ["read", "want_to_read", "currently_reading"];
+    if (!validStatuses.includes(status)) {
       return NextResponse.json(
-        { error: "Status must be 'read' or 'want_to_read'" },
+        { error: "Status must be 'read', 'want_to_read', or 'currently_reading'" },
         { status: 400 }
       );
     }
     if (rating !== undefined && rating !== null && !validRating(rating)) {
       return NextResponse.json(
-        { error: "Rating must be an integer from 1 to 5" },
+        { error: "Rating must be from 0.5 to 5 in half-star steps" },
         { status: 400 }
       );
     }
+    const notesStr =
+      notes !== undefined && notes !== null ? String(notes).trim() : null;
+    const normalizedRating =
+      rating !== undefined && rating !== null && validRating(rating)
+        ? Math.round(rating * 2) / 2
+        : null;
     const book = await prisma.book.create({
       data: {
         title: title.trim(),
@@ -64,12 +74,29 @@ export async function POST(request: Request) {
         genre: genre.trim(),
         status,
         addedBy: session.user.name,
-        ...(rating !== undefined && rating !== null && validRating(rating)
-          ? { rating }
-          : {}),
+        ...(normalizedRating != null ? { rating: normalizedRating } : {}),
       },
     });
-    return NextResponse.json(book);
+    const hasReview = normalizedRating != null || (notesStr && notesStr.length > 0);
+    if (hasReview) {
+      await prisma.bookReview.create({
+        data: {
+          userId: session.user.id,
+          bookId: book.id,
+          rating: normalizedRating,
+          notes: notesStr || null,
+        },
+      });
+    }
+    const bookWithReviews = await prisma.book.findUnique({
+      where: { id: book.id },
+      include: {
+        reviews: {
+          include: { user: { select: { id: true, name: true } } },
+        },
+      },
+    });
+    return NextResponse.json(bookWithReviews ?? book);
   } catch (e) {
     return NextResponse.json(
       { error: "Failed to add book" },

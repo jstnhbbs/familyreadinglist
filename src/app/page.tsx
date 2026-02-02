@@ -55,8 +55,19 @@ export default function Home() {
     genre: "Fiction",
     status: "want_to_read",
     rating: null as number | null,
+    notes: "",
   });
   const [savingReviewBookId, setSavingReviewBookId] = useState<string | null>(null);
+  const [editingBookId, setEditingBookId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{
+    title: string;
+    author: string;
+    genre: string;
+    status: string;
+    rating: number | null;
+    notes: string;
+  } | null>(null);
+  const [savingEditBookId, setSavingEditBookId] = useState<string | null>(null);
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -97,6 +108,7 @@ export default function Home() {
         body: JSON.stringify({
           ...form,
           rating: form.rating ?? undefined,
+          notes: form.notes.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -110,6 +122,7 @@ export default function Home() {
         genre: "Fiction",
         status: "want_to_read",
         rating: null,
+        notes: "",
       });
       setFormOpen(false);
       await fetchBooks();
@@ -153,6 +166,69 @@ export default function Home() {
     session?.user?.id
       ? book.reviews.find((r) => r.user.id === session.user.id)
       : null;
+
+  const handleStartEdit = (book: Book) => {
+    const myReview = getMyReview(book);
+    setEditingBookId(book.id);
+    setEditForm({
+      title: book.title,
+      author: book.author,
+      genre: book.genre,
+      status: book.status,
+      rating: myReview?.rating ?? null,
+      notes: myReview?.notes ?? "",
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingBookId(null);
+    setEditForm(null);
+  };
+
+  const handleSaveEdit = async (bookId: string) => {
+    if (!editForm) return;
+    setSavingEditBookId(bookId);
+    try {
+      const bookRes = await fetch(`/api/books/${bookId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editForm.title,
+          author: editForm.author,
+          genre: editForm.genre,
+          status: editForm.status,
+        }),
+      });
+      const reviewRes = await fetch(`/api/books/${bookId}/reviews`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rating: editForm.rating ?? null,
+          notes: editForm.notes.trim() || null,
+        }),
+      });
+      if (bookRes.ok) {
+        if (!reviewRes.ok) {
+          const err = await reviewRes.json().catch(() => ({}));
+          console.error("Review save failed:", err);
+        }
+        await fetchBooks();
+        setEditingBookId(null);
+        setEditForm(null);
+      } else await fetchBooks();
+    } catch {
+      await fetchBooks();
+    } finally {
+      setSavingEditBookId(null);
+    }
+  };
+
+  const statusLabel = (status: string) =>
+    status === "read"
+      ? "Read"
+      : status === "currently_reading"
+        ? "Currently reading"
+        : "Want to read";
 
   if (sessionStatus === "loading") {
     return (
@@ -293,26 +369,46 @@ export default function Home() {
                     setForm((f) => ({
                       ...f,
                       status: e.target.value,
-                      ...(e.target.value === "want_to_read" ? { rating: null } : {}),
+                      ...(e.target.value === "want_to_read"
+                        ? { rating: null, notes: "" }
+                        : {}),
                     }))
                   }
                   className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
                 >
                   <option value="want_to_read">Want to read</option>
+                  <option value="currently_reading">Currently reading</option>
                   <option value="read">Read</option>
                 </select>
               </div>
-              {form.status === "read" && (
-                <div className="sm:col-span-2">
-                  <label className="mb-1 block text-sm font-medium text-stone-700">
-                    Your rating (optional)
-                  </label>
-                  <StarRating
-                    value={form.rating}
-                    onChange={(n) => setForm((f) => ({ ...f, rating: n }))}
-                    readonly={false}
-                  />
-                </div>
+              {(form.status === "read" || form.status === "currently_reading") && (
+                <>
+                  <div className="sm:col-span-2">
+                    <label className="mb-1 block text-sm font-medium text-stone-700">
+                      Your rating (optional)
+                    </label>
+                    <StarRating
+                      value={form.rating}
+                      onChange={(n) => setForm((f) => ({ ...f, rating: n }))}
+                      readonly={false}
+                      size="md"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="mb-1 block text-sm font-medium text-stone-700">
+                      Your notes (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={form.notes}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, notes: e.target.value }))
+                      }
+                      className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      placeholder="e.g. Great summer read, would recommend"
+                    />
+                  </div>
+                </>
               )}
             </div>
             <div className="mt-4">
@@ -347,44 +443,166 @@ export default function Home() {
                   key={book.id}
                   className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-serif text-lg font-semibold text-stone-900">
-                        {book.title}
-                      </h3>
-                      <p className="text-stone-600">{book.author}</p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-                          {book.genre}
-                        </span>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            book.status === "read"
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-sky-100 text-sky-800"
-                          }`}
+                  {editingBookId === book.id && editForm ? (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
+                      <p className="mb-3 text-sm font-medium text-amber-900">
+                        Edit book
+                      </p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                            Title
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.title}
+                            onChange={(e) =>
+                              setEditForm((f) => f && { ...f, title: e.target.value })
+                            }
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                            Author
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.author}
+                            onChange={(e) =>
+                              setEditForm((f) => f && { ...f, author: e.target.value })
+                            }
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                            Genre
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.genre}
+                            onChange={(e) =>
+                              setEditForm((f) => f && { ...f, genre: e.target.value })
+                            }
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                            Status
+                          </label>
+                          <select
+                            value={editForm.status}
+                            onChange={(e) =>
+                              setEditForm((f) => f && { ...f, status: e.target.value })
+                            }
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          >
+                            <option value="want_to_read">Want to read</option>
+                            <option value="currently_reading">Currently reading</option>
+                            <option value="read">Read</option>
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                            Your rating
+                          </label>
+                          <StarRating
+                            value={editForm.rating}
+                            onChange={(n) =>
+                              setEditForm((f) => f && { ...f, rating: n })
+                            }
+                            readonly={false}
+                            size="md"
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                            Your notes
+                          </label>
+                          <input
+                            type="text"
+                            value={editForm.notes}
+                            onChange={(e) =>
+                              setEditForm((f) => f && { ...f, notes: e.target.value })
+                            }
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            placeholder="Optional note about this book"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleSaveEdit(book.id)}
+                          disabled={savingEditBookId === book.id}
+                          className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500"
                         >
-                          {book.status === "read" ? "Read" : "Want to read"}
-                        </span>
+                          {savingEditBookId === book.id ? "Saving…" : "Save"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          className="rounded border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
-                    <span className="text-sm text-stone-500">by {book.addedBy}</span>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-serif text-lg font-semibold text-stone-900">
+                            {book.title}
+                          </h3>
+                          <p className="text-stone-600">{book.author}</p>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                              {book.genre}
+                            </span>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                book.status === "read"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : book.status === "currently_reading"
+                                    ? "bg-amber-100 text-amber-800"
+                                    : "bg-sky-100 text-sky-800"
+                              }`}
+                            >
+                              {statusLabel(book.status)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {session?.user?.name === book.addedBy && (
+                            <button
+                              type="button"
+                              onClick={() => handleStartEdit(book)}
+                              className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-600 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            >
+                              Edit
+                            </button>
+                          )}
+                          <span className="text-sm text-stone-500">by {book.addedBy}</span>
+                        </div>
+                      </div>
 
                   {/* Your rating & notes (signed-in only) */}
                   {session && (
-                    <div className="mt-4 border-t border-stone-100 pt-4">
-                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-500">
+                    <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50/80 px-3 py-3">
+                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-600">
                         Your review
                       </p>
                       <div className="flex flex-wrap items-start gap-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-stone-600">Rating:</span>
+                          <span className="text-sm font-medium text-stone-700">Rating:</span>
                           <StarRating
                             value={myReview?.rating ?? null}
                             onChange={(n) => handleSaveReview(book.id, { rating: n })}
                             readonly={false}
-                            size="sm"
+                            size="md"
                           />
                           {savingReviewBookId === book.id && (
                             <span className="text-xs text-stone-400">Saving…</span>
@@ -437,6 +655,8 @@ export default function Home() {
                         ))}
                       </ul>
                     </div>
+                  )}
+                    </>
                   )}
                 </li>
               );

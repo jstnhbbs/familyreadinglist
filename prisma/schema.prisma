@@ -21,7 +21,7 @@ model Book {
   author    String
   genre     String
   status    String       // "read" | "want_to_read"
-  rating    Int?         // legacy: optional 1-5 from original adder
+  rating    Float?       // legacy: optional 0.5-5 from original adder
   addedBy   String
   createdAt DateTime     @default(now())
   reviews   BookReview[]
@@ -31,7 +31,7 @@ model BookReview {
   id        String   @id @default(cuid())
   userId    String
   bookId    String
-  rating    Int?     // 1-5
+  rating    Float?   // 0.5 to 5 in 0.5 steps (half stars)
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
