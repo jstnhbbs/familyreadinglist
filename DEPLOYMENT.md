@@ -50,4 +50,37 @@ Vercel’s serverless environment doesn’t keep a local SQLite file, so use **T
 
 ---
 
+## Troubleshooting: 404 on Vercel
+
+If you see **404: not_found** (or a blank 404 page):
+
+1. **Check the deployment**
+   - In the Vercel dashboard, open your project → **Deployments**. Open the latest deployment.
+   - If the status is **Failed** or **Error**, the app never deployed. Open the deployment and read the **Build Logs** to fix the error, then redeploy.
+
+2. **Leave Output Directory empty**
+   - **Project Settings → General → Build & Development Settings**
+   - **Output Directory** must be **empty** (or the default). Do **not** set it to `out`, `build`, or `.next`. Next.js uses its own output; setting this wrong causes 404s.
+
+3. **Root Directory**
+   - If your app lives at the **root** of the repo, **Root Directory** should be **empty**.
+   - If the app is in a subfolder (e.g. `apps/web`), set **Root Directory** to that folder.
+
+4. **Build command**
+   - Use **Build Command**: `npm run build` (or leave default so Vercel uses the repo’s `package.json`).
+
+5. **Environment variables**
+   - In **Project Settings → Environment Variables**, set **Production** (and Preview if you want):
+     - `NEXTAUTH_SECRET` – long random string
+     - `NEXTAUTH_URL` – **exactly** your Vercel URL, e.g. `https://your-project.vercel.app` (no trailing slash)
+     - `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` – from Turso
+   - Redeploy after changing env vars.
+
+6. **Use the deployment URL**
+   - Open the URL from the deployment (e.g. `https://familyreadinglist-xxx.vercel.app`). A wrong or old URL can show 404.
+
+After changing any of the above, trigger a new deploy (push a commit or **Redeploy** in the Vercel dashboard).
+
+---
+
 **Summary:** Use **GitHub** for code and **Vercel** for hosting. Push to GitHub → Vercel builds and deploys. The app runs on Vercel with Turso as the database; GitHub Pages is not used for this app.
