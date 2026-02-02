@@ -1,0 +1,45 @@
+# Optional: deploy to Vercel when pushing to main.
+# The easiest way is to connect the repo in the Vercel dashboard (see DEPLOYMENT.md);
+# then Vercel deploys automatically and you don't need this workflow.
+#
+# If you prefer to trigger deploys from GitHub Actions (e.g. with a Vercel token),
+# you can adapt this workflow or use the "Deploy to Vercel" button in the repo.
+
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  # Placeholder: Vercel usually deploys via its own GitHub integration.
+  # Uncomment and set VERCEL_ORG_ID + VERCEL_PROJECT_ID + VERCEL_TOKEN (secret)
+  # if you want to deploy from this workflow instead.
+  #
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: amondnet/vercel-action@v25
+  #       with:
+  #         vercel-token: ${{ secrets.VERCEL_TOKEN }}
+  #         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+  #         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+  #         working-directory: ./
+
+  # For now, just confirm the app builds so you know the repo is healthy.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build
+        env:
+          # Dummy env so build doesn't fail; real values go in Vercel.
+          DATABASE_URL: "file:./dev.db"
+          NEXTAUTH_SECRET: "ci-placeholder"
+          NEXTAUTH_URL: "http://localhost:3000"
