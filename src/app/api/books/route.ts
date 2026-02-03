@@ -11,7 +11,7 @@ export async function GET(request: Request) {
       where: genre && genre !== "all" ? { genre } : undefined,
       include: {
         reviews: {
-          where: { hidden: false },
+          where: { NOT: { hidden: true } },
           include: { user: { select: { id: true, name: true } } },
         },
       },
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       where: { id: book.id },
       include: {
         reviews: {
-          where: { hidden: false },
+          where: { NOT: { hidden: true } },
           include: { user: { select: { id: true, name: true } } },
         },
       },
