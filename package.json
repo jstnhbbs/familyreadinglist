@@ -12,7 +12,8 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:push:turso": "node scripts/push-turso.mjs"
+    "db:push:turso": "node scripts/push-turso.mjs",
+    "db:migrate-turso-hidden": "node scripts/migrate-turso-hidden.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

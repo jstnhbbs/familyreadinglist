@@ -18,8 +18,12 @@ export async function GET(request: Request) {
     });
     return NextResponse.json(books);
   } catch (e) {
+    console.error("GET /api/books failed:", e);
     return NextResponse.json(
-      { error: "Failed to fetch books" },
+      {
+        error: "Failed to fetch books",
+        ...(process.env.NODE_ENV === "development" && e instanceof Error && { detail: e.message }),
+      },
       { status: 500 }
     );
   }
