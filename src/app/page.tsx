@@ -108,19 +108,6 @@ export default function Home() {
     return true;
   });
 
-  const openWantToReadForm = () => {
-    setForm({
-      title: "",
-      author: "",
-      genre: "Fiction",
-      status: "want_to_read",
-      rating: null,
-      notes: "",
-    });
-    setFormOpen(true);
-    setFormError("");
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
@@ -391,22 +378,13 @@ export default function Home() {
             </label>
           )}
           {session && (
-            <div className="ml-auto flex gap-2">
-              <button
-                type="button"
-                onClick={openWantToReadForm}
-                className="rounded-lg border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800 shadow-sm hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
-              >
-                Want to read
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormOpen(!formOpen)}
-                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
-              >
-                {formOpen ? "Cancel" : "Add a book"}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setFormOpen(!formOpen)}
+              className="ml-auto rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+            >
+              {formOpen ? "Cancel" : "Add a book"}
+            </button>
           )}
         </div>
 
