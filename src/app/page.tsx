@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { StarRating } from "@/components/StarRating";
 import { SignIn } from "@/components/SignIn";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 type Review = {
   id: string;
@@ -309,20 +310,23 @@ export default function Home() {
                 Share what you&apos;ve read and what you want to read with the group.
               </p>
             </div>
-            {session ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-stone-600 dark:text-stone-400">
-                  Signed in as <strong>{session.user.name}</strong>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
-                >
-                  Sign out
-                </button>
-              </div>
-            ) : null}
+            <div className="flex items-center gap-3">
+              <DarkModeToggle />
+              {session ? (
+                <>
+                  <span className="text-sm text-stone-600 dark:text-stone-400">
+                    Signed in as <strong>{session.user.name}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : null}
+            </div>
           </div>
         </header>
 
