@@ -48,6 +48,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [genreFilter, setGenreFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [myWantToReadOnly, setMyWantToReadOnly] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -70,6 +71,7 @@ export default function Home() {
     notes: string;
   } | null>(null);
   const [savingEditBookId, setSavingEditBookId] = useState<string | null>(null);
+  const [listActionError, setListActionError] = useState<string | null>(null);
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -94,9 +96,15 @@ export default function Home() {
   const allGenres = Array.from(
     new Set([...COMMON_GENRES, ...genresFromBooks])
   ).sort();
+  const getMyReview = (book: Book) =>
+    session?.user?.id
+      ? book.reviews.find((r) => r.user.id === session.user.id)
+      : null;
+
   const filteredBooks = books.filter((b) => {
     if (genreFilter !== "all" && b.genre !== genreFilter) return false;
     if (statusFilter !== "all" && b.status !== statusFilter) return false;
+    if (session && myWantToReadOnly && !getMyReview(b)?.wantToRead) return false;
     return true;
   });
 
@@ -195,6 +203,7 @@ export default function Home() {
   };
 
   const handleSetWantToRead = async (bookId: string, wantToRead: boolean) => {
+    setListActionError(null);
     setSavingReviewBookId(bookId);
     try {
       const res = await fetch(`/api/books/${bookId}/reviews`, {
@@ -216,21 +225,19 @@ export default function Home() {
         );
         await fetchBooks();
       } else {
-        const err = await res.json().catch(() => ({}));
-        console.error("Failed to save want to read:", err);
+        const err = await res.json().catch(() => ({})) as { error?: string; detail?: string; hint?: string };
+        console.error("Failed to save want to read:", res.status, err);
+        const message = [err.error, err.detail, err.hint].filter(Boolean).join(" — ");
+        setListActionError(message || "Could not update your list.");
         await fetchBooks();
       }
     } catch {
+      setListActionError("Could not update your list. Try again.");
       await fetchBooks();
     } finally {
       setSavingReviewBookId(null);
     }
   };
-
-  const getMyReview = (book: Book) =>
-    session?.user?.id
-      ? book.reviews.find((r) => r.user.id === session.user.id)
-      : null;
 
   const handleStartEdit = (book: Book) => {
     const myReview = getMyReview(book);
@@ -373,6 +380,17 @@ export default function Home() {
             <option value="read">Read</option>
           </select>
           {session && (
+            <label className="ml-2 flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={myWantToReadOnly}
+                onChange={(e) => setMyWantToReadOnly(e.target.checked)}
+                className="h-4 w-4 rounded border-stone-300 text-sky-600 focus:ring-sky-500"
+              />
+              <span className="text-sm font-medium text-stone-600">My list</span>
+            </label>
+          )}
+          {session && (
             <div className="ml-auto flex gap-2">
               <button
                 type="button"
@@ -510,20 +528,41 @@ export default function Home() {
           </form>
         )}
 
+        {listActionError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            {listActionError}
+            <button
+              type="button"
+              onClick={() => setListActionError(null)}
+              className="ml-2 font-medium underline hover:no-underline"
+              aria-label="Dismiss"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
         {loading ? (
           <p className="text-stone-500">Loading…</p>
         ) : filteredBooks.length === 0 ? (
           <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-stone-500">
             {books.length === 0
               ? "No books yet. Sign in and add one to get started!"
-              : statusFilter !== "all"
-                ? `No books marked "${statusLabel(statusFilter)}". Try another filter or add one.`
-                : genreFilter !== "all"
-                  ? `No books in "${genreFilter}". Try another genre or add one.`
-                  : "No books match the current filters."}
+              : myWantToReadOnly
+                ? "Your list is empty. Uncheck \"My list\" to see all books, then click \"Add to my list\" on any book you want to read."
+                : statusFilter !== "all"
+                  ? `No books marked "${statusLabel(statusFilter)}". Try another filter or add one.`
+                  : genreFilter !== "all"
+                    ? `No books in "${genreFilter}". Try another genre or add one.`
+                    : "No books match the current filters."}
           </div>
         ) : (
-          <ul className="space-y-3">
+          <>
+            {myWantToReadOnly && (
+              <h2 className="mb-3 font-serif text-lg font-semibold text-stone-800">
+                Books I want to read
+              </h2>
+            )}
+            <ul className="space-y-3">
             {filteredBooks.map((book) => {
               const myReview = getMyReview(book);
               const otherReviews = book.reviews.filter(
@@ -680,83 +719,78 @@ export default function Home() {
                         </div>
                       </div>
 
-                  {/* Your review / Want to read (signed-in only) */}
-                  {session && (() => {
-                    const hasRatingOrNotes = myReview && (myReview.rating != null || (myReview.notes ?? "").trim());
-                    const wantToReadOnly = myReview?.wantToRead && !hasRatingOrNotes;
-                    return (
-                      <div className="mt-4 space-y-3">
-                        {hasRatingOrNotes && (
-                          <div className="rounded-lg border border-stone-200 bg-stone-50/80 px-3 py-3">
-                            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-600">
-                              Your review
-                            </p>
-                            <div className="flex flex-wrap items-start gap-4">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-stone-700">Rating:</span>
-                                <StarRating
-                                  value={myReview?.rating ?? null}
-                                  onChange={(n) => handleSaveReview(book.id, { rating: n })}
-                                  readonly={false}
-                                  size="md"
-                                />
-                                {savingReviewBookId === book.id && (
-                                  <span className="text-xs text-stone-400">Saving…</span>
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <label className="sr-only">Your notes</label>
-                                <input
-                                  type="text"
-                                  placeholder="Add a note…"
-                                  defaultValue={myReview?.notes ?? ""}
-                                  onBlur={(e) => {
-                                    const v = e.target.value.trim();
-                                    if (v === (myReview?.notes ?? "")) return;
-                                    handleSaveReview(book.id, { notes: v || null });
-                                  }}
-                                  className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                                />
-                              </div>
-                              {myReview && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleHideReview(book.id)}
-                                  disabled={savingReviewBookId === book.id}
-                                  className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-500 hover:bg-stone-50 hover:text-stone-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                >
-                                  {savingReviewBookId === book.id ? "Removing…" : "Delete review"}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        {wantToReadOnly && (
-                          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-2">
-                            <span className="text-sm font-medium text-sky-800">You want to read this</span>
-                            <button
-                              type="button"
-                              onClick={() => handleSetWantToRead(book.id, false)}
-                              disabled={savingReviewBookId === book.id}
-                              className="rounded border border-sky-300 bg-white px-2 py-1 text-xs text-sky-600 hover:bg-sky-50 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                            >
-                              {savingReviewBookId === book.id ? "Removing…" : "Remove from want to read"}
-                            </button>
-                          </div>
-                        )}
-                        {!myReview?.wantToRead && !hasRatingOrNotes && (
+                  {/* My list: flag/unflag for "books I want to read" (signed-in only) */}
+                  {session && (
+                    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-2">
+                      {myReview?.wantToRead ? (
+                        <>
+                          <span className="text-sm font-medium text-sky-800">On my list</span>
                           <button
                             type="button"
-                            onClick={() => handleSetWantToRead(book.id, true)}
+                            onClick={() => handleSetWantToRead(book.id, false)}
                             disabled={savingReviewBookId === book.id}
-                            className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-800 hover:bg-sky-100 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                            className="rounded border border-sky-300 bg-white px-2 py-1 text-xs text-sky-600 hover:bg-sky-50 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500"
                           >
-                            {savingReviewBookId === book.id ? "Saving…" : "Want to read"}
+                            {savingReviewBookId === book.id ? "Removing…" : "Remove from my list"}
                           </button>
-                        )}
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSetWantToRead(book.id, true)}
+                          disabled={savingReviewBookId === book.id}
+                          className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-800 hover:bg-sky-100 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                        >
+                          {savingReviewBookId === book.id ? "Adding…" : "Add to my list"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Your review (rating & notes) - signed-in only */}
+                  {session && myReview && (myReview.rating != null || (myReview.notes ?? "").trim()) && (
+                    <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50/80 px-3 py-3">
+                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-600">
+                        Your review
+                      </p>
+                      <div className="flex flex-wrap items-start gap-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-stone-700">Rating:</span>
+                          <StarRating
+                            value={myReview.rating ?? null}
+                            onChange={(n) => handleSaveReview(book.id, { rating: n })}
+                            readonly={false}
+                            size="md"
+                          />
+                          {savingReviewBookId === book.id && (
+                            <span className="text-xs text-stone-400">Saving…</span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <label className="sr-only">Your notes</label>
+                          <input
+                            type="text"
+                            placeholder="Add a note…"
+                            defaultValue={myReview.notes ?? ""}
+                            onBlur={(e) => {
+                              const v = e.target.value.trim();
+                              if (v === (myReview.notes ?? "")) return;
+                              handleSaveReview(book.id, { notes: v || null });
+                            }}
+                            className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleHideReview(book.id)}
+                          disabled={savingReviewBookId === book.id}
+                          className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-500 hover:bg-stone-50 hover:text-stone-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        >
+                          {savingReviewBookId === book.id ? "Removing…" : "Delete review"}
+                        </button>
                       </div>
-                    );
-                  })()}
+                    </div>
+                  )}
 
                   {/* Other people's reviews */}
                   {otherReviews.length > 0 && (
@@ -794,6 +828,7 @@ export default function Home() {
               );
             })}
           </ul>
+          </>
         )}
       </div>
     </div>

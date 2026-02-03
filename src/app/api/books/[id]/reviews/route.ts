@@ -121,11 +121,17 @@ export async function PUT(
     });
     return NextResponse.json(review);
   } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
     console.error("PUT /api/books/[id]/reviews failed:", e);
+    const isColumnError =
+      /wantToRead|no such column|unknown column/i.test(message);
     return NextResponse.json(
       {
         error: "Failed to save review",
-        ...(process.env.NODE_ENV === "development" && e instanceof Error && { detail: e.message }),
+        ...(process.env.NODE_ENV === "development" && { detail: message }),
+        ...(isColumnError && {
+          hint: "If using Turso, run: npm run db:migrate-turso-want-to-read",
+        }),
       },
       { status: 500 }
     );
