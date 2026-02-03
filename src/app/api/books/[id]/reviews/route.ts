@@ -43,7 +43,7 @@ export async function PUT(
   const { id: bookId } = await params;
   try {
     const body = await request.json();
-    const { rating, notes, hidden } = body;
+    const { rating, notes, hidden, wantToRead } = body;
 
     if (hidden === true || hidden === false) {
       const review = await prisma.bookReview.upsert({
@@ -56,8 +56,28 @@ export async function PUT(
           rating: null,
           notes: null,
           hidden,
+          wantToRead: false,
         },
         update: { hidden },
+        include: { user: { select: { id: true, name: true } } },
+      });
+      return NextResponse.json(review);
+    }
+
+    if (wantToRead === true || wantToRead === false) {
+      const review = await prisma.bookReview.upsert({
+        where: {
+          userId_bookId: { userId: session.user.id, bookId },
+        },
+        create: {
+          userId: session.user.id,
+          bookId,
+          rating: null,
+          notes: null,
+          hidden: false,
+          wantToRead,
+        },
+        update: { wantToRead },
         include: { user: { select: { id: true, name: true } } },
       });
       return NextResponse.json(review);
@@ -85,6 +105,7 @@ export async function PUT(
         rating: normalizedRating,
         notes: notesStr || null,
         hidden: false,
+        wantToRead: false,
       },
       update: {
         ...(rating !== undefined ? { rating: normalizedRating } : {}),

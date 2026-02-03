@@ -11,6 +11,7 @@ type Review = {
   bookId: string;
   rating: number | null;
   notes: string | null;
+  wantToRead: boolean;
   user: { id: string; name: string };
 };
 
@@ -46,6 +47,7 @@ export default function Home() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [genreFilter, setGenreFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -92,10 +94,24 @@ export default function Home() {
   const allGenres = Array.from(
     new Set([...COMMON_GENRES, ...genresFromBooks])
   ).sort();
-  const filteredBooks =
-    genreFilter === "all"
-      ? books
-      : books.filter((b) => b.genre === genreFilter);
+  const filteredBooks = books.filter((b) => {
+    if (genreFilter !== "all" && b.genre !== genreFilter) return false;
+    if (statusFilter !== "all" && b.status !== statusFilter) return false;
+    return true;
+  });
+
+  const openWantToReadForm = () => {
+    setForm({
+      title: "",
+      author: "",
+      genre: "Fiction",
+      status: "want_to_read",
+      rating: null,
+      notes: "",
+    });
+    setFormOpen(true);
+    setFormError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,6 +185,22 @@ export default function Home() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hidden: true }),
+      });
+      if (res.ok) await fetchBooks();
+    } catch {
+      await fetchBooks();
+    } finally {
+      setSavingReviewBookId(null);
+    }
+  };
+
+  const handleSetWantToRead = async (bookId: string, wantToRead: boolean) => {
+    setSavingReviewBookId(bookId);
+    try {
+      const res = await fetch(`/api/books/${bookId}/reviews`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wantToRead }),
       });
       if (res.ok) await fetchBooks();
     } catch {
@@ -310,14 +342,36 @@ export default function Home() {
               </option>
             ))}
           </select>
+          <label className="ml-2 text-sm font-medium text-stone-600">
+            Status:
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          >
+            <option value="all">All</option>
+            <option value="want_to_read">Want to read</option>
+            <option value="currently_reading">Currently reading</option>
+            <option value="read">Read</option>
+          </select>
           {session && (
-            <button
-              type="button"
-              onClick={() => setFormOpen(!formOpen)}
-              className="ml-auto rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
-            >
-              {formOpen ? "Cancel" : "Add a book"}
-            </button>
+            <div className="ml-auto flex gap-2">
+              <button
+                type="button"
+                onClick={openWantToReadForm}
+                className="rounded-lg border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800 shadow-sm hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+              >
+                Want to read
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormOpen(!formOpen)}
+                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+              >
+                {formOpen ? "Cancel" : "Add a book"}
+              </button>
+            </div>
           )}
         </div>
 
@@ -445,7 +499,11 @@ export default function Home() {
           <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-stone-500">
             {books.length === 0
               ? "No books yet. Sign in and add one to get started!"
-              : `No books in "${genreFilter}". Try another genre or add one.`}
+              : statusFilter !== "all"
+                ? `No books marked "${statusLabel(statusFilter)}". Try another filter or add one.`
+                : genreFilter !== "all"
+                  ? `No books in "${genreFilter}". Try another genre or add one.`
+                  : "No books match the current filters."}
           </div>
         ) : (
           <ul className="space-y-3">
@@ -605,52 +663,83 @@ export default function Home() {
                         </div>
                       </div>
 
-                  {/* Your rating & notes (signed-in only) */}
-                  {session && (
-                    <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50/80 px-3 py-3">
-                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-600">
-                        Your review
-                      </p>
-                      <div className="flex flex-wrap items-start gap-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-stone-700">Rating:</span>
-                          <StarRating
-                            value={myReview?.rating ?? null}
-                            onChange={(n) => handleSaveReview(book.id, { rating: n })}
-                            readonly={false}
-                            size="md"
-                          />
-                          {savingReviewBookId === book.id && (
-                            <span className="text-xs text-stone-400">Saving…</span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <label className="sr-only">Your notes</label>
-                          <input
-                            type="text"
-                            placeholder="Add a note…"
-                            defaultValue={myReview?.notes ?? ""}
-                            onBlur={(e) => {
-                              const v = e.target.value.trim();
-                              if (v === (myReview?.notes ?? "")) return;
-                              handleSaveReview(book.id, { notes: v || null });
-                            }}
-                            className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                          />
-                        </div>
-                        {myReview && (
+                  {/* Your review / Want to read (signed-in only) */}
+                  {session && (() => {
+                    const hasRatingOrNotes = myReview && (myReview.rating != null || (myReview.notes ?? "").trim());
+                    const wantToReadOnly = myReview?.wantToRead && !hasRatingOrNotes;
+                    return (
+                      <div className="mt-4 space-y-3">
+                        {hasRatingOrNotes && (
+                          <div className="rounded-lg border border-stone-200 bg-stone-50/80 px-3 py-3">
+                            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-600">
+                              Your review
+                            </p>
+                            <div className="flex flex-wrap items-start gap-4">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-stone-700">Rating:</span>
+                                <StarRating
+                                  value={myReview?.rating ?? null}
+                                  onChange={(n) => handleSaveReview(book.id, { rating: n })}
+                                  readonly={false}
+                                  size="md"
+                                />
+                                {savingReviewBookId === book.id && (
+                                  <span className="text-xs text-stone-400">Saving…</span>
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <label className="sr-only">Your notes</label>
+                                <input
+                                  type="text"
+                                  placeholder="Add a note…"
+                                  defaultValue={myReview?.notes ?? ""}
+                                  onBlur={(e) => {
+                                    const v = e.target.value.trim();
+                                    if (v === (myReview?.notes ?? "")) return;
+                                    handleSaveReview(book.id, { notes: v || null });
+                                  }}
+                                  className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                                />
+                              </div>
+                              {myReview && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleHideReview(book.id)}
+                                  disabled={savingReviewBookId === book.id}
+                                  className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-500 hover:bg-stone-50 hover:text-stone-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                >
+                                  {savingReviewBookId === book.id ? "Removing…" : "Delete review"}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {wantToReadOnly && (
+                          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-2">
+                            <span className="text-sm font-medium text-sky-800">You want to read this</span>
+                            <button
+                              type="button"
+                              onClick={() => handleSetWantToRead(book.id, false)}
+                              disabled={savingReviewBookId === book.id}
+                              className="rounded border border-sky-300 bg-white px-2 py-1 text-xs text-sky-600 hover:bg-sky-50 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            >
+                              {savingReviewBookId === book.id ? "Removing…" : "Remove from want to read"}
+                            </button>
+                          </div>
+                        )}
+                        {!myReview?.wantToRead && !hasRatingOrNotes && (
                           <button
                             type="button"
-                            onClick={() => handleHideReview(book.id)}
+                            onClick={() => handleSetWantToRead(book.id, true)}
                             disabled={savingReviewBookId === book.id}
-                            className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-500 hover:bg-stone-50 hover:text-stone-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-800 hover:bg-sky-100 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
                           >
-                            {savingReviewBookId === book.id ? "Removing…" : "Delete review"}
+                            {savingReviewBookId === book.id ? "Saving…" : "Want to read"}
                           </button>
                         )}
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Other people's reviews */}
                   {otherReviews.length > 0 && (

@@ -33,8 +33,9 @@ model BookReview {
   bookId    String
   rating    Float?    // 0.5 to 5 in 0.5 steps (half stars)
   notes     String?
-  hidden    Boolean   @default(false) // when true, review is not shown on the page (data kept)
-  createdAt DateTime  @default(now())
+  hidden     Boolean   @default(false) // when true, review is not shown on the page (data kept)
+  wantToRead Boolean   @default(false) // when true, user has marked this book as want to read
+  createdAt  DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   book      Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)

@@ -13,7 +13,8 @@
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:push:turso": "node scripts/push-turso.mjs",
-    "db:migrate-turso-hidden": "node scripts/migrate-turso-hidden.mjs"
+    "db:migrate-turso-hidden": "node scripts/migrate-turso-hidden.mjs",
+    "db:migrate-turso-want-to-read": "node scripts/migrate-turso-want-to-read.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
