@@ -16,7 +16,7 @@ export async function GET(
   const { id: bookId } = await params;
   try {
     const reviews = await prisma.bookReview.findMany({
-      where: { bookId },
+      where: { bookId, hidden: false },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { updatedAt: "desc" },
     });
@@ -43,7 +43,26 @@ export async function PUT(
   const { id: bookId } = await params;
   try {
     const body = await request.json();
-    const { rating, notes } = body;
+    const { rating, notes, hidden } = body;
+
+    if (hidden === true || hidden === false) {
+      const review = await prisma.bookReview.upsert({
+        where: {
+          userId_bookId: { userId: session.user.id, bookId },
+        },
+        create: {
+          userId: session.user.id,
+          bookId,
+          rating: null,
+          notes: null,
+          hidden,
+        },
+        update: { hidden },
+        include: { user: { select: { id: true, name: true } } },
+      });
+      return NextResponse.json(review);
+    }
+
     if (rating !== undefined && rating !== null && !validRating(rating)) {
       return NextResponse.json(
         { error: "Rating must be from 0.5 to 5 in half-star steps" },
@@ -65,6 +84,7 @@ export async function PUT(
         bookId,
         rating: normalizedRating,
         notes: notesStr || null,
+        hidden: false,
       },
       update: {
         ...(rating !== undefined ? { rating: normalizedRating } : {}),

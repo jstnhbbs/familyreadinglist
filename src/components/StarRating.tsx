@@ -26,7 +26,11 @@ export function StarRating({
   size = "md",
   readonly = false,
 }: StarRatingProps) {
-  const rating = value != null ? Number(value) : 0;
+  // Normalize to 0–5 in 0.5 steps so half-stars render correctly (avoids int/float coercion)
+  const rating =
+    value != null
+      ? Math.min(5, Math.max(0, Math.round(Number(value) * 2) / 2))
+      : 0;
   const isInteractive = !readonly && onChange;
   const sizeClass = sizeClasses[size];
   const baseId = useId().replace(/:/g, "");
@@ -49,7 +53,7 @@ export function StarRating({
       role={readonly ? "img" : "group"}
       aria-label={
         value != null
-          ? `${value} out of ${MAX_STARS} stars`
+          ? `${rating} out of ${MAX_STARS} stars`
           : "No rating"
       }
     >
