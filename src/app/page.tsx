@@ -162,6 +162,22 @@ export default function Home() {
     }
   };
 
+  const handleHideReview = async (bookId: string) => {
+    setSavingReviewBookId(bookId);
+    try {
+      const res = await fetch(`/api/books/${bookId}/reviews`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hidden: true }),
+      });
+      if (res.ok) await fetchBooks();
+    } catch {
+      await fetchBooks();
+    } finally {
+      setSavingReviewBookId(null);
+    }
+  };
+
   const getMyReview = (book: Book) =>
     session?.user?.id
       ? book.reviews.find((r) => r.user.id === session.user.id)
@@ -622,6 +638,16 @@ export default function Home() {
                             className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
                           />
                         </div>
+                        {myReview && (
+                          <button
+                            type="button"
+                            onClick={() => handleHideReview(book.id)}
+                            disabled={savingReviewBookId === book.id}
+                            className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-500 hover:bg-stone-50 hover:text-stone-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          >
+                            {savingReviewBookId === book.id ? "Removing…" : "Delete review"}
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
