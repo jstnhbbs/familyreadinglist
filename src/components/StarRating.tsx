@@ -105,14 +105,14 @@ export function StarRating({
               <path
                 d={starPath}
                 fill="currentColor"
-                className="text-stone-500"
+                className="text-stone-500 dark:text-stone-500"
                 fillOpacity={0.65}
               />
               {/* Filled portion – dark amber, masked to show left portion only */}
               <path
                 d={starPath}
                 fill="currentColor"
-                className="text-amber-700"
+                className="text-amber-700 dark:text-amber-400"
                 mask={`url(#${baseId}-star-mask-${i})`}
               />
             </svg>

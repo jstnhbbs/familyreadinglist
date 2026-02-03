@@ -72,22 +72,22 @@ export function SignIn() {
     (mode === "signin" ? true : name.trim() && password.length >= 8);
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-4 font-serif text-xl font-semibold text-amber-900">
+    <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-700 dark:bg-stone-800">
+      <h2 className="mb-4 font-serif text-xl font-semibold text-amber-900 dark:text-amber-100">
         {mode === "signin" ? "Sign in" : "Create an account"}
       </h2>
       {registerSuccess && (
-        <p className="mb-3 text-sm text-emerald-600">
+        <p className="mb-3 text-sm text-emerald-600 dark:text-emerald-400">
           Account created. Signing you in…
         </p>
       )}
-      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
       <form
         onSubmit={mode === "signin" ? handleSignIn : handleRegister}
         className="space-y-4"
       >
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">
+          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
             Email
           </label>
           <input
@@ -95,14 +95,14 @@ export function SignIn() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-200 dark:placeholder:text-stone-500"
             placeholder="you@example.com"
             autoComplete="email"
           />
         </div>
         {mode === "register" && (
           <div>
-            <label className="mb-1 block text-sm font-medium text-stone-700">
+            <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
               Your name
             </label>
             <input
@@ -110,14 +110,14 @@ export function SignIn() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-200 dark:placeholder:text-stone-500"
               placeholder="How the group will see you"
               autoComplete="name"
             />
           </div>
         )}
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">
+          <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
             Password
           </label>
           <input
@@ -125,7 +125,7 @@ export function SignIn() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-200 dark:placeholder:text-stone-500"
             placeholder={mode === "register" ? "At least 8 characters" : ""}
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
             minLength={mode === "register" ? 8 : undefined}
@@ -135,7 +135,7 @@ export function SignIn() {
           <button
             type="submit"
             disabled={loading || !canSubmit}
-            className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+            className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:bg-amber-500 dark:hover:bg-amber-600 dark:focus:ring-offset-stone-800"
           >
             {loading
               ? "Please wait…"
@@ -149,7 +149,7 @@ export function SignIn() {
               setMode(mode === "signin" ? "register" : "signin");
               setError("");
             }}
-            className="text-sm text-amber-700 hover:underline"
+            className="text-sm text-amber-700 hover:underline dark:text-amber-400 dark:hover:no-underline"
           >
             {mode === "signin"
               ? "Need an account? Register"

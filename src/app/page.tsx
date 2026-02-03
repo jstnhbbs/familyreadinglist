@@ -290,34 +290,34 @@ export default function Home() {
 
   if (sessionStatus === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-100 text-stone-500">
+      <div className="flex min-h-screen items-center justify-center bg-stone-100 text-stone-500 dark:bg-stone-900 dark:text-stone-400">
         Loading…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-100 text-stone-900">
+    <div className="min-h-screen bg-stone-100 text-stone-900 dark:bg-stone-900 dark:text-stone-100">
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
         <header className="mb-10">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="font-serif text-4xl font-bold tracking-tight text-amber-900">
+              <h1 className="font-serif text-4xl font-bold tracking-tight text-amber-900 dark:text-amber-200">
                 Family Reading List
               </h1>
-              <p className="mt-2 text-stone-600">
+              <p className="mt-2 text-stone-600 dark:text-stone-400">
                 Share what you&apos;ve read and what you want to read with the group.
               </p>
             </div>
             {session ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-stone-600">
+                <span className="text-sm text-stone-600 dark:text-stone-400">
                   Signed in as <strong>{session.user.name}</strong>
                 </span>
                 <button
                   type="button"
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700"
                 >
                   Sign out
                 </button>
@@ -329,7 +329,7 @@ export default function Home() {
         {!session && (
           <div className="mb-8">
             <SignIn />
-            <p className="mt-4 text-sm text-stone-500">
+            <p className="mt-4 text-sm text-stone-500 dark:text-stone-400">
               Sign in to add books and your own ratings and notes. You can still
               browse the list below.
             </p>
@@ -337,13 +337,13 @@ export default function Home() {
         )}
 
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <label className="text-sm font-medium text-stone-600">
+          <label className="text-sm font-medium text-stone-600 dark:text-stone-400">
             Filter by genre:
           </label>
           <select
             value={genreFilter}
             onChange={(e) => setGenreFilter(e.target.value)}
-            className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
           >
             <option value="all">All genres</option>
             {allGenres.map((g) => (
@@ -352,13 +352,13 @@ export default function Home() {
               </option>
             ))}
           </select>
-          <label className="ml-2 text-sm font-medium text-stone-600">
+          <label className="ml-2 text-sm font-medium text-stone-600 dark:text-stone-400">
             Status:
           </label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 shadow-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
           >
             <option value="all">All</option>
             <option value="want_to_read">Want to read</option>
@@ -373,14 +373,14 @@ export default function Home() {
                 onChange={(e) => setMyWantToReadOnly(e.target.checked)}
                 className="h-4 w-4 rounded border-stone-300 text-sky-600 focus:ring-sky-500"
               />
-              <span className="text-sm font-medium text-stone-600">My list</span>
+              <span className="text-sm font-medium text-stone-600 dark:text-stone-400">My list</span>
             </label>
           )}
           {session && (
             <button
               type="button"
               onClick={() => setFormOpen(!formOpen)}
-              className="ml-auto rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+              className="ml-auto rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:bg-amber-500 dark:hover:bg-amber-600 dark:focus:ring-offset-stone-900"
             >
               {formOpen ? "Cancel" : "Add a book"}
             </button>
@@ -390,17 +390,17 @@ export default function Home() {
         {session && formOpen && (
           <form
             onSubmit={handleSubmit}
-            className="mb-8 rounded-xl border border-amber-200 bg-amber-50/80 p-6 shadow-sm"
+            className="mb-8 rounded-xl border border-amber-200 bg-amber-50/80 p-6 shadow-sm dark:border-amber-800 dark:bg-amber-950/50"
           >
-            <h2 className="mb-4 font-serif text-xl font-semibold text-amber-900">
+            <h2 className="mb-4 font-serif text-xl font-semibold text-amber-900 dark:text-amber-100">
               Add a book
             </h2>
             {formError && (
-              <p className="mb-3 text-sm text-red-600">{formError}</p>
+              <p className="mb-3 text-sm text-red-600 dark:text-red-400">{formError}</p>
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-stone-700">
+                <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
                   Title *
                 </label>
                 <input
@@ -408,12 +408,12 @@ export default function Home() {
                   required
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200 dark:placeholder:text-stone-500"
                   placeholder="e.g. The Great Gatsby"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-stone-700">
+                <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
                   Author *
                 </label>
                 <input
@@ -421,18 +421,18 @@ export default function Home() {
                   required
                   value={form.author}
                   onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200 dark:placeholder:text-stone-500"
                   placeholder="e.g. F. Scott Fitzgerald"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-stone-700">
+                <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
                   Genre *
                 </label>
                 <select
                   value={form.genre}
                   onChange={(e) => setForm((f) => ({ ...f, genre: e.target.value }))}
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
                 >
                   {COMMON_GENRES.map((g) => (
                     <option key={g} value={g}>
@@ -442,7 +442,7 @@ export default function Home() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-stone-700">
+                <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
                   Status
                 </label>
                 <select
@@ -456,7 +456,7 @@ export default function Home() {
                         : {}),
                     }))
                   }
-                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full rounded-lg border border-stone-300 px-3 py-2 text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
                 >
                   <option value="want_to_read">Want to read</option>
                   <option value="currently_reading">Currently reading</option>
@@ -466,7 +466,7 @@ export default function Home() {
               {(form.status === "read" || form.status === "currently_reading") && (
                 <>
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block text-sm font-medium text-stone-700">
+                    <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
                       Your rating (optional)
                     </label>
                     <StarRating
@@ -477,7 +477,7 @@ export default function Home() {
                     />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="mb-1 block text-sm font-medium text-stone-700">
+                    <label className="mb-1 block text-sm font-medium text-stone-700 dark:text-stone-300">
                       Your notes (optional)
                     </label>
                     <input
@@ -486,7 +486,7 @@ export default function Home() {
                       onChange={(e) =>
                         setForm((f) => ({ ...f, notes: e.target.value }))
                       }
-                      className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200 dark:placeholder:text-stone-500"
                       placeholder="e.g. Great summer read, would recommend"
                     />
                   </div>
@@ -497,7 +497,7 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-amber-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:bg-amber-500 dark:hover:bg-amber-600 dark:focus:ring-offset-stone-900"
               >
                 {submitting ? "Adding…" : "Add to list"}
               </button>
@@ -506,7 +506,7 @@ export default function Home() {
         )}
 
         {listActionError && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200">
             {listActionError}
             <button
               type="button"
@@ -519,9 +519,9 @@ export default function Home() {
           </div>
         )}
         {loading ? (
-          <p className="text-stone-500">Loading…</p>
+          <p className="text-stone-500 dark:text-stone-400">Loading…</p>
         ) : filteredBooks.length === 0 ? (
-          <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-stone-500">
+          <div className="rounded-xl border border-stone-200 bg-white p-8 text-center text-stone-500 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-400">
             {books.length === 0
               ? "No books yet. Sign in and add one to get started!"
               : myWantToReadOnly
@@ -535,7 +535,7 @@ export default function Home() {
         ) : (
           <>
             {myWantToReadOnly && (
-              <h2 className="mb-3 font-serif text-lg font-semibold text-stone-800">
+              <h2 className="mb-3 font-serif text-lg font-semibold text-stone-800 dark:text-stone-200">
                 Books I want to read
               </h2>
             )}
@@ -548,16 +548,16 @@ export default function Home() {
               return (
                 <li
                   key={book.id}
-                  className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                  className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-stone-700 dark:bg-stone-800 dark:hover:shadow-lg"
                 >
                   {editingBookId === book.id && editForm ? (
-                    <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
-                      <p className="mb-3 text-sm font-medium text-amber-900">
+                    <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 dark:border-amber-800 dark:bg-amber-950/40">
+                      <p className="mb-3 text-sm font-medium text-amber-900 dark:text-amber-100">
                         Edit book
                       </p>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div>
-                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                          <label className="mb-1 block text-xs font-medium text-stone-600 dark:text-stone-400">
                             Title
                           </label>
                           <input
@@ -566,11 +566,11 @@ export default function Home() {
                             onChange={(e) =>
                               setEditForm((f) => f && { ...f, title: e.target.value })
                             }
-                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                          <label className="mb-1 block text-xs font-medium text-stone-600 dark:text-stone-400">
                             Author
                           </label>
                           <input
@@ -579,11 +579,11 @@ export default function Home() {
                             onChange={(e) =>
                               setEditForm((f) => f && { ...f, author: e.target.value })
                             }
-                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                          <label className="mb-1 block text-xs font-medium text-stone-600 dark:text-stone-400">
                             Genre
                           </label>
                           <input
@@ -592,11 +592,11 @@ export default function Home() {
                             onChange={(e) =>
                               setEditForm((f) => f && { ...f, genre: e.target.value })
                             }
-                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
                           />
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                          <label className="mb-1 block text-xs font-medium text-stone-600 dark:text-stone-400">
                             Status
                           </label>
                           <select
@@ -604,7 +604,7 @@ export default function Home() {
                             onChange={(e) =>
                               setEditForm((f) => f && { ...f, status: e.target.value })
                             }
-                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200"
                           >
                             <option value="want_to_read">Want to read</option>
                             <option value="currently_reading">Currently reading</option>
@@ -612,7 +612,7 @@ export default function Home() {
                           </select>
                         </div>
                         <div className="sm:col-span-2">
-                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                          <label className="mb-1 block text-xs font-medium text-stone-600 dark:text-stone-400">
                             Your rating
                           </label>
                           <StarRating
@@ -625,7 +625,7 @@ export default function Home() {
                           />
                         </div>
                         <div className="sm:col-span-2">
-                          <label className="mb-1 block text-xs font-medium text-stone-600">
+                          <label className="mb-1 block text-xs font-medium text-stone-600 dark:text-stone-400">
                             Your notes
                           </label>
                           <input
@@ -634,7 +634,7 @@ export default function Home() {
                             onChange={(e) =>
                               setEditForm((f) => f && { ...f, notes: e.target.value })
                             }
-                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            className="w-full rounded border border-stone-300 px-2 py-1.5 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-200 dark:placeholder:text-stone-500"
                             placeholder="Optional note about this book"
                           />
                         </div>
@@ -644,14 +644,14 @@ export default function Home() {
                           type="button"
                           onClick={() => handleSaveEdit(book.id)}
                           disabled={savingEditBookId === book.id}
-                          className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          className="rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-amber-500 dark:hover:bg-amber-600"
                         >
                           {savingEditBookId === book.id ? "Saving…" : "Save"}
                         </button>
                         <button
                           type="button"
                           onClick={handleCancelEdit}
-                          className="rounded border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          className="rounded border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-300 dark:hover:bg-stone-600"
                         >
                           Cancel
                         </button>
@@ -661,21 +661,21 @@ export default function Home() {
                     <>
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-serif text-lg font-semibold text-stone-900">
+                          <h3 className="font-serif text-lg font-semibold text-stone-900 dark:text-stone-100">
                             {book.title}
                           </h3>
-                          <p className="text-stone-600">{book.author}</p>
+                          <p className="text-stone-600 dark:text-stone-400">{book.author}</p>
                           <div className="mt-2 flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                            <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
                               {book.genre}
                             </span>
                             <span
                               className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                                 book.status === "read"
-                                  ? "bg-emerald-100 text-emerald-800"
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
                                   : book.status === "currently_reading"
-                                    ? "bg-amber-100 text-amber-800"
-                                    : "bg-sky-100 text-sky-800"
+                                    ? "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200"
+                                    : "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-200"
                               }`}
                             >
                               {statusLabel(book.status)}
@@ -687,26 +687,26 @@ export default function Home() {
                             <button
                               type="button"
                               onClick={() => handleStartEdit(book)}
-                              className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-600 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                              className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-600 hover:bg-stone-50 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-300 dark:hover:bg-stone-600"
                             >
                               Edit
                             </button>
                           )}
-                          <span className="text-sm text-stone-500">by {book.addedBy}</span>
+                          <span className="text-sm text-stone-500 dark:text-stone-400">by {book.addedBy}</span>
                         </div>
                       </div>
 
                   {/* My list: flag/unflag for "books I want to read" (signed-in only) */}
                   {session && (
-                    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-2">
+                    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-sky-200 bg-sky-50/80 px-3 py-2 dark:border-sky-800 dark:bg-sky-950/50">
                       {myReview?.wantToRead ? (
                         <>
-                          <span className="text-sm font-medium text-sky-800">On my list</span>
+                          <span className="text-sm font-medium text-sky-800 dark:text-sky-200">On my list</span>
                           <button
                             type="button"
                             onClick={() => handleSetWantToRead(book.id, false)}
                             disabled={savingReviewBookId === book.id}
-                            className="rounded border border-sky-300 bg-white px-2 py-1 text-xs text-sky-600 hover:bg-sky-50 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            className="rounded border border-sky-300 bg-white px-2 py-1 text-xs text-sky-600 hover:bg-sky-50 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-sky-700 dark:bg-stone-800 dark:text-sky-300 dark:hover:bg-stone-700"
                           >
                             {savingReviewBookId === book.id ? "Removing…" : "Remove from my list"}
                           </button>
@@ -716,7 +716,7 @@ export default function Home() {
                           type="button"
                           onClick={() => handleSetWantToRead(book.id, true)}
                           disabled={savingReviewBookId === book.id}
-                          className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-800 hover:bg-sky-100 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                          className="rounded-lg border border-sky-300 bg-sky-50 px-3 py-2 text-sm font-medium text-sky-800 hover:bg-sky-100 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:border-sky-700 dark:bg-sky-950/50 dark:text-sky-200 dark:hover:bg-sky-900/50 dark:focus:ring-offset-stone-800"
                         >
                           {savingReviewBookId === book.id ? "Adding…" : "Add to my list"}
                         </button>
@@ -726,13 +726,13 @@ export default function Home() {
 
                   {/* Your review (rating & notes) - signed-in only */}
                   {session && myReview && (myReview.rating != null || (myReview.notes ?? "").trim()) && (
-                    <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50/80 px-3 py-3">
-                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-600">
+                    <div className="mt-4 rounded-lg border border-stone-200 bg-stone-50/80 px-3 py-3 dark:border-stone-700 dark:bg-stone-800/80">
+                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-600 dark:text-stone-400">
                         Your review
                       </p>
                       <div className="flex flex-wrap items-start gap-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-stone-700">Rating:</span>
+                          <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Rating:</span>
                           <StarRating
                             value={myReview.rating ?? null}
                             onChange={(n) => handleSaveReview(book.id, { rating: n })}
@@ -754,14 +754,14 @@ export default function Home() {
                               if (v === (myReview.notes ?? "")) return;
                               handleSaveReview(book.id, { notes: v || null });
                             }}
-                            className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            className="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-200 dark:placeholder:text-stone-500"
                           />
                         </div>
                         <button
                           type="button"
                           onClick={() => handleHideReview(book.id)}
                           disabled={savingReviewBookId === book.id}
-                          className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-500 hover:bg-stone-50 hover:text-stone-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          className="rounded border border-stone-300 bg-white px-2 py-1 text-xs text-stone-500 hover:bg-stone-50 hover:text-stone-700 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-stone-600 dark:bg-stone-700 dark:text-stone-400 dark:hover:bg-stone-600"
                         >
                           {savingReviewBookId === book.id ? "Removing…" : "Delete review"}
                         </button>
@@ -771,8 +771,8 @@ export default function Home() {
 
                   {/* Other people's reviews */}
                   {otherReviews.length > 0 && (
-                    <div className="mt-4 border-t border-stone-100 pt-4">
-                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-500">
+                    <div className="mt-4 border-t border-stone-100 pt-4 dark:border-stone-700">
+                      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-500 dark:text-stone-400">
                         Others&apos; reviews
                       </p>
                       <ul className="space-y-2">
@@ -781,7 +781,7 @@ export default function Home() {
                             key={r.id}
                             className="flex flex-wrap items-baseline gap-2 text-sm"
                           >
-                            <span className="font-medium text-stone-700">
+                            <span className="font-medium text-stone-700 dark:text-stone-300">
                               {r.user.name}:
                             </span>
                             {r.rating != null && (
@@ -792,7 +792,7 @@ export default function Home() {
                               />
                             )}
                             {r.notes && (
-                              <span className="text-stone-600">&ldquo;{r.notes}&rdquo;</span>
+                              <span className="text-stone-600 dark:text-stone-400">&ldquo;{r.notes}&rdquo;</span>
                             )}
                           </li>
                         ))}
