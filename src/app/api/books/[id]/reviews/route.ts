@@ -71,7 +71,7 @@ export async function PUT(
     }
 
     if (wantToRead !== undefined) {
-      const review = await prisma.bookReview.upsert({
+      await prisma.bookReview.upsert({
         where: {
           userId_bookId: { userId: session.user.id, bookId },
         },
@@ -84,8 +84,19 @@ export async function PUT(
           wantToRead: !!wantToRead,
         },
         update: { wantToRead: !!wantToRead },
+      });
+      const review = await prisma.bookReview.findUnique({
+        where: {
+          userId_bookId: { userId: session.user.id, bookId },
+        },
         include: { user: { select: { id: true, name: true } } },
       });
+      if (!review) {
+        return NextResponse.json(
+          { error: "Review not found after save" },
+          { status: 500 }
+        );
+      }
       return NextResponse.json(review);
     }
 

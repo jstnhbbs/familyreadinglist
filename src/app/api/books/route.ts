@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth-server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const genre = searchParams.get("genre");
@@ -16,7 +18,9 @@ export async function GET(request: Request) {
         },
       },
     });
-    return NextResponse.json(books);
+    return NextResponse.json(books, {
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
   } catch (e) {
     console.error("GET /api/books failed:", e);
     return NextResponse.json(

@@ -76,7 +76,7 @@ export default function Home() {
   const fetchBooks = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/books");
+      const res = await fetch("/api/books", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setBooks(data);
