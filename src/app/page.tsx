@@ -202,7 +202,24 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wantToRead }),
       });
-      if (res.ok) await fetchBooks();
+      if (res.ok) {
+        const review = (await res.json()) as Review;
+        setBooks((prev) =>
+          prev.map((b) => {
+            if (b.id !== bookId) return b;
+            const others = b.reviews.filter((r) => r.user.id !== session?.user?.id);
+            return {
+              ...b,
+              reviews: [review, ...others],
+            };
+          })
+        );
+        await fetchBooks();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        console.error("Failed to save want to read:", err);
+        await fetchBooks();
+      }
     } catch {
       await fetchBooks();
     } finally {

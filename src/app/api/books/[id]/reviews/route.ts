@@ -43,7 +43,13 @@ export async function PUT(
   const { id: bookId } = await params;
   try {
     const body = await request.json();
-    const { rating, notes, hidden, wantToRead } = body;
+    const { rating, notes, hidden, wantToRead: wantToReadRaw } = body;
+    const wantToRead =
+      wantToReadRaw === true || wantToReadRaw === "true"
+        ? true
+        : wantToReadRaw === false || wantToReadRaw === "false"
+          ? false
+          : undefined;
 
     if (hidden === true || hidden === false) {
       const review = await prisma.bookReview.upsert({
@@ -64,7 +70,7 @@ export async function PUT(
       return NextResponse.json(review);
     }
 
-    if (wantToRead === true || wantToRead === false) {
+    if (wantToRead !== undefined) {
       const review = await prisma.bookReview.upsert({
         where: {
           userId_bookId: { userId: session.user.id, bookId },
@@ -75,9 +81,9 @@ export async function PUT(
           rating: null,
           notes: null,
           hidden: false,
-          wantToRead,
+          wantToRead: !!wantToRead,
         },
-        update: { wantToRead },
+        update: { wantToRead: !!wantToRead },
         include: { user: { select: { id: true, name: true } } },
       });
       return NextResponse.json(review);
@@ -115,8 +121,12 @@ export async function PUT(
     });
     return NextResponse.json(review);
   } catch (e) {
+    console.error("PUT /api/books/[id]/reviews failed:", e);
     return NextResponse.json(
-      { error: "Failed to save review" },
+      {
+        error: "Failed to save review",
+        ...(process.env.NODE_ENV === "development" && e instanceof Error && { detail: e.message }),
+      },
       { status: 500 }
     );
   }
