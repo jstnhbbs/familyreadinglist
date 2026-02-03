@@ -206,11 +206,10 @@ export default function Home() {
             const others = b.reviews.filter((r) => r.user.id !== session?.user?.id);
             return {
               ...b,
-              reviews: [review, ...others],
+              reviews: [{ ...review, wantToRead }, ...others],
             };
           })
         );
-        await fetchBooks();
       } else {
         const err = await res.json().catch(() => ({})) as { error?: string; detail?: string; hint?: string };
         console.error("Failed to save want to read:", res.status, err);
